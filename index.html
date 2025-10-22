@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Accuracy Practice</title>
+  <!-- Link CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>Hello World!</h1>
+
+  <!-- Link JS -->
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+<img src="photo.jpg" alt="Harinath">
+
+<div class="container" id="loginScreen">
+  <h2>🔐 Login</h2>
+  <p>Enter your email and name to continue</p>
+  <input type="email" id="email" placeholder="Enter Email"><br>
+  <input type="text" id="username" placeholder="Enter Name"><br>
+  <button onclick="loginUser()" class="btn-red">Login</button>
+</div>
+
+<div class="container hidden" id="setupScreen">
+  <h2>MATHS CALC GAME</h2>
+  <p>Select your difficulty and time to start the challenge!</p>
+
+  <label>Difficulty:</label>
+  <select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+    <option value="pro">Pro</option>
+    <option value="legend">Legend</option>
+  </select><br>
+
+  <label>Time (minutes):</label>
+  <input type="number" id="time" placeholder="e.g. 2"><br>
+
+  <button onclick="startGame()" class="btn-start">START</button>
+</div>
+
+<div class="container hidden" id="gameScreen">
+  <h3 id="timer">Time: 0s</h3>
+  <div id="question"></div>
+  <input type="number" id="answer" placeholder="Enter your answer"><br>
+  <button class="btn-red" onclick="submitAnswer()">Submit</button>
+  <button class="btn-gray" onclick="skipQuestion()">Skip</button>
+  <button class="btn-gray" onclick="backToSetup()">Back to Setup</button>
+  <p id="feedback"></p>
+</div>
+
+<div class="container hidden" id="resultScreen">
+  <div class="result-box">
+    <h2>🧾 Results</h2>
+    <p id="modePlayed"></p>
+    <p id="totalQ"></p>
+    <p id="correctQ"></p>
+    <p id="wrongQ"></p>
+    <p id="skippedQ"></p>
+    <p id="accuracy"></p>
+    <p id="avgTime"></p>
+    <p id="points"></p>
+    <button onclick="showMistakes()">Show Mistakes</button>
+    <div id="mistakesBox"></div>
+    <button onclick="restart()">QUIT</button>
+  </div>
+</div>
+
+<div class="container" id="leaderboardSection">
+  <h2>🏆 Leaderboard</h2>
+  <div>
+    <button onclick="sortLeaderboard('points')">Sort by Total Points</button>
+    <button onclick="sortLeaderboard('mode')">Sort by Mode</button>
+  </div>
+
+  <table id="leaderboardTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Mode</th>
+        <th>Time</th>
+        <th>Accuracy (%)</th>
+        <th>Points</th>
+        <th>Total Points</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboardBody"></tbody>
+  </table>
+
+  <button class="btn-red" onclick="startDailyPuzzle()">🎯 Daily Puzzle</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
