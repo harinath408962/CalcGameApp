@@ -1,103 +1,699 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Math Accuracy Practice</title>
-  <!-- Link CSS -->
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Maths Calc Game — Firebase</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f1724; --accent:#12c2a9; --muted:#9aa4b2;
+      --glass: rgba(255,255,255,0.03); --btn-radius:10px;
+      --surface:#0b1220; --text:#e6eef6;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg,#071129 0%, #0b1220 100%);
+      color:var(--text); -webkit-font-smoothing:antialiased;
+      padding:18px;
+    }
+    .wrap{max-width:1100px;margin:0 auto;}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{margin:0;font-size:20px}
+    .small{font-size:13px;color:var(--muted)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:16px;border-radius:12px;margin-bottom:14px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.02)
+    }
+    label{display:block;margin-top:8px;color:var(--muted);font-size:13px}
+    input[type="text"], input[type="number"], select{
+      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);
+      background:transparent;color:inherit;font-size:15px;margin-top:6px;
+    }
+    button{cursor:pointer;border:0;padding:10px 14px;border-radius:10px;font-weight:700}
+    .btn-primary{background:linear-gradient(90deg,#12c2a9,#19d1c0);color:#042026}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text)}
+    .btn-warning{background:#ffd54f;color:#05200a}
+    .btn-red{background:#ff6b6b;color:#fff}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    #question{font-size:28px;margin:18px 0}
+    #timer{font-weight:700;color:#fff}
+    .feedback{height:24px;margin-top:8px;font-weight:600;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;margin-top:12px;background:transparent}
+    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:center;font-size:14px}
+    th{color:var(--muted);font-weight:700}
+    .tabs{display:flex;gap:8px;margin-top:12px}
+    .tab{padding:8px 12px;border-radius:8px;background:var(--glass);cursor:pointer;color:var(--muted)}
+    .tab.active{background:linear-gradient(90deg,#0b1220,#14202b);color:#fff;border:1px solid rgba(255,255,255,0.03)}
+    .hide{display:none}
+    .modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      background: #071129; color: var(--text); padding: 18px; border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7); width: 90%; max-width: 700px; z-index: 999;
+      border:1px solid rgba(255,255,255,0.04)
+    }
+    .modal h3{margin-top:0}
+    .modal .list{max-height: 320px; overflow:auto; margin-top:12px; text-align:left; padding-right:6px}
+    .modal .close{margin-top:12px}
+    @media (max-width:720px){
+      header{flex-direction:column;align-items:flex-start}
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Maths Calc Game</h1>
+        <div class="small">Practice calculations · speed & accuracy · global leaderboards</div>
+      </div>
+      <div style="margin-left:auto" class="small">Daily Puzzle: 5 legend questions • Same for everyone</div>
+    </header>
 
-  <h1>Hello World!</h1>
+    <!-- Setup card -->
+    <div id="setupCard" class="card">
+      <h3>Setup</h3>
+      <div class="small">Enter your name, pick difficulty and time (or Play Daily Puzzle)</div>
 
-  <!-- Link JS -->
-  <script src="script.js"></script>
-</body>
-</html>
+      <label>Name</label>
+      <input id="userId" type="text" placeholder="Your name (shown on leaderboard)">
 
+      <label>Mode</label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+        <option value="pro">Pro</option>
+        <option value="legend">Legend</option>
+      </select>
 
+      <label>Time (minutes)</label>
+      <input id="time" type="number" min="1" value="2">
 
-<img src="photo.jpg" alt="Harinath">
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+        <button id="btnStart" class="btn-primary" onclick="startGame()">Start</button>
+        <button id="btnDaily" class="btn-warning" onclick="startDaily()">Play Daily Puzzle</button>
+        <button id="btnViewLB" class="btn-ghost" onclick="showTab('main')">View Leaderboards</button>
+      </div>
+    </div>
 
-<div class="container" id="loginScreen">
-  <h2>🔐 Login</h2>
-  <p>Enter your email and name to continue</p>
-  <input type="email" id="email" placeholder="Enter Email"><br>
-  <input type="text" id="username" placeholder="Enter Name"><br>
-  <button onclick="loginUser()" class="btn-red">Login</button>
-</div>
+    <!-- Game card -->
+    <div id="gameCard" class="card hide">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="small" id="playInfo">Mode: -</div>
+        <div id="timer" style="font-size:18px">Time: 0s</div>
+      </div>
 
-<div class="container hidden" id="setupScreen">
-  <h2>MATHS CALC GAME</h2>
-  <p>Select your difficulty and time to start the challenge!</p>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:12px 0">
 
-  <label>Difficulty:</label>
-  <select id="difficulty">
-    <option value="easy">Easy</option>
-    <option value="medium">Medium</option>
-    <option value="hard">Hard</option>
-    <option value="pro">Pro</option>
-    <option value="legend">Legend</option>
-  </select><br>
+      <div id="question" style="min-height:48px"></div>
 
-  <label>Time (minutes):</label>
-  <input type="number" id="time" placeholder="e.g. 2"><br>
+      <input id="inpAns" type="number" step="any" placeholder="Type your answer" style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit" />
 
-  <button onclick="startGame()" class="btn-start">START</button>
-</div>
+      <div class="controls" style="margin-top:10px">
+        <button id="btnSubmit" class="btn-primary" onclick="submitAnswer()">Submit</button>
+        <button id="btnSkip" class="btn-ghost" onclick="skipQuestion()">Skip</button>
+        <button id="btnQuit" class="btn-ghost" onclick="confirmQuit()">Quit</button>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
 
-<div class="container hidden" id="gameScreen">
-  <h3 id="timer">Time: 0s</h3>
-  <div id="question"></div>
-  <input type="number" id="answer" placeholder="Enter your answer"><br>
-  <button class="btn-red" onclick="submitAnswer()">Submit</button>
-  <button class="btn-gray" onclick="skipQuestion()">Skip</button>
-  <button class="btn-gray" onclick="backToSetup()">Back to Setup</button>
-  <p id="feedback"></p>
-</div>
+    <!-- Results card -->
+    <div id="resultCard" class="card hide">
+      <h3>Results</h3>
+      <div class="small" id="userSummary"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px">
+        <div class="card small"><strong id="resTotal">0</strong><div>Total Questions</div></div>
+        <div class="card small"><strong id="resCorrect">0</strong><div>Correct</div></div>
+        <div class="card small"><strong id="resWrong">0</strong><div>Wrong</div></div>
+        <div class="card small"><strong id="resSkipped">0</strong><div>Skipped</div></div>
+        <div class="card small"><strong id="resAccuracy">0%</strong><div>Accuracy</div></div>
+        <div class="card small"><strong id="resPoints">0</strong><div>Points</div></div>
+      </div>
 
-<div class="container hidden" id="resultScreen">
-  <div class="result-box">
-    <h2>🧾 Results</h2>
-    <p id="modePlayed"></p>
-    <p id="totalQ"></p>
-    <p id="correctQ"></p>
-    <p id="wrongQ"></p>
-    <p id="skippedQ"></p>
-    <p id="accuracy"></p>
-    <p id="avgTime"></p>
-    <p id="points"></p>
-    <button onclick="showMistakes()">Show Mistakes</button>
-    <div id="mistakesBox"></div>
-    <button onclick="restart()">QUIT</button>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn-ghost" onclick="openMistakes()">Wrongly Answered Questions</button>
+        <button class="btn-primary" onclick="backToSetup()">Back to Setup</button>
+      </div>
+    </div>
+
+    <!-- Leaderboards -->
+    <div id="leaderboardCards" class="card">
+      <div class="tabs">
+        <div id="tabMain" class="tab active" onclick="showTab('main')">🏆 Main Leaderboard</div>
+        <div id="tabDaily" class="tab" onclick="showTab('daily')">📅 Daily Leaderboard</div>
+      </div>
+
+      <div id="mainControls" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="small">Filter:</div>
+        <select id="filterMode" onchange="updateMainBoard()">
+          <option value="all">All</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="pro">Pro</option>
+          <option value="legend">Legend</option>
+          <option value="daily">DailyPuzzle</option>
+        </select>
+        <button class="btn-ghost" onclick="sortByTotalPoints()">Sort by Total Points</button>
+        <button class="btn-red" onclick="resetPrompt('main')">Reset Main (admin)</button>
+      </div>
+
+      <div id="mainBoard" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Mode</th><th>Time</th><th>Accuracy</th><th>Points</th><th>Total Points</th><th>When</th></tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+
+      <div id="dailyBoard" class="hide" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="small">Daily puzzle: <span id="dailySeedLabel"></span> — 5 legend questions (same for all)</div>
+          <div>
+            <button class="btn-red" onclick="resetPrompt('daily')">Reset Daily (admin)</button>
+          </div>
+        </div>
+        <table style="margin-top:12px">
+          <thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Time</th><th>Status</th><th>When</th></tr></thead>
+          <tbody id="dailyBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="container" id="leaderboardSection">
-  <h2>🏆 Leaderboard</h2>
-  <div>
-    <button onclick="sortLeaderboard('points')">Sort by Total Points</button>
-    <button onclick="sortLeaderboard('mode')">Sort by Mode</button>
+  <!-- mistakes modal -->
+  <div id="mistakesModal" class="modal hide" role="dialog" aria-modal="true" aria-labelledby="mistakesTitle">
+    <h3 id="mistakesTitle">Wrong Answers</h3>
+    <div class="list" id="mistakesList"></div>
+    <div style="text-align:right"><button class="btn-primary close" onclick="closeMistakes()">Close</button></div>
   </div>
 
-  <table id="leaderboardTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Mode</th>
-        <th>Time</th>
-        <th>Accuracy (%)</th>
-        <th>Points</th>
-        <th>Total Points</th>
-      </tr>
-    </thead>
-    <tbody id="leaderboardBody"></tbody>
-  </table>
+  <!-- firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-  <button class="btn-red" onclick="startDailyPuzzle()">🎯 Daily Puzzle</button>
-</div>
+  <script>
+  /************ Firebase config (kept same as provided) ************/
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHYJ_B_veakWBfyu04ET-IIsAV_ysh390",
+    authDomain: "math-calc-game.firebaseapp.com",
+    databaseURL: "https://math-calc-game-default-rtdb.firebaseio.com",
+    projectId: "math-calc-game",
+    storageBucket: "math-calc-game.firebasestorage.app",
+    messagingSenderId: "1054274296637",
+    appId: "1:1054274296637:web:7b1d52f63b30afd93e0354",
+    measurementId: "G-RBYQPPQH02"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-<script src="script.js"></script>
+  /************ App state ************/
+  let timerInterval = null;
+  let remainingTime = 0;
+  let correct = 0, wrong = 0, total = 0, skipped = 0, startTime = null;
+  let currentAnswer = null, currentQuestion = null;
+  let userId = "", difficulty = "easy", timeMin = 1;
+  let mistakes = [];
+  const modePoints = { easy: 10, medium: 25, hard: 200, pro: 500, legend: 1000 };
+
+  // daily-specific
+  let playingDaily = false;
+  let dailySeed = null;           // yyyy-mm-dd
+  let dailyQuestions = [];        // [{q,a},...]
+  let dailyIndex = 0;
+  let answeredIndices = new Set();
+  let dailyStartAt = null;
+
+  /************ UI helpers ************/
+  function show(id){ document.getElementById(id).classList.remove('hide'); }
+  function hide(id){ document.getElementById(id).classList.add('hide'); }
+
+  /************ Start normal game ************/
+  function startGame(){
+    userId = (document.getElementById('userId').value||'').trim();
+    difficulty = document.getElementById('difficulty').value;
+    timeMin = parseInt(document.getElementById('time').value) || 1;
+    if(!userId){ alert('Please enter your name'); return; }
+    playingDaily = false;
+    resetGameState();
+    hide('setupCard'); show('gameCard'); hide('leaderboardCards'); hide('resultCard');
+    remainingTime = timeMin * 60;
+    startTime = Date.now();
+    document.getElementById('playInfo').textContent = `${userId} • Mode: ${difficulty}`;
+    startTimer();
+    nextQuestion(difficulty);
+  }
+
+  /************ Start daily puzzle ************/
+  function startDaily(){
+    userId = (document.getElementById('userId').value||'').trim();
+    if(!userId){ alert('Please enter your name'); return; }
+    playingDaily = true;
+    difficulty = 'daily';
+    dailySeed = new Date().toISOString().slice(0,10);
+    // ensure questions exist; then check played flag and start
+    ensureDailyQuestions(dailySeed).then(()=>{
+      // check if user already finished today (optional - you wanted one play/day)
+      db.ref(`dailyPlayed/${dailySeed}/${sanitizeKey(userId)}`).once('value').then(snap=>{
+        if(snap.exists()){
+          alert("You have already played today's Daily Puzzle. Come back tomorrow.");
+          return;
+        }
+        // load questions
+        db.ref(`dailyQuestions/${dailySeed}`).once('value').then(snap=>{
+          dailyQuestions = snap.val() || [];
+          if(!Array.isArray(dailyQuestions) || dailyQuestions.length === 0){
+            alert('Daily questions not available. Try later.');
+            return;
+          }
+          resetGameState();
+          hide('setupCard'); show('gameCard'); hide('leaderboardCards'); hide('resultCard');
+          // for daily, no skip allowed (we'll disable skip button)
+          document.getElementById('btnSkip').disabled = true;
+          remainingTime = 0; // no max limit; timer will show elapsed
+          dailyStartAt = Date.now();
+          startTimer(); // timer will show elapsed
+          dailyIndex = 0;
+          answeredIndices = new Set();
+          nextDailyQuestion();
+        });
+      });
+    });
+  }
+
+  /************ Ensure daily questions exist (5 legend questions seeded by date) ************/
+  function ensureDailyQuestions(seedDate){
+    const ref = db.ref(`dailyQuestions/${seedDate}`);
+    return ref.once('value').then(snap=>{
+      if(snap.exists()) return;
+      // generate 5 legend questions deterministic by date
+      const set = generateLegendSet(seedDate, 5);
+      return ref.set(set);
+    });
+  }
+
+  function generateLegendSet(seedDate, count){
+    // deterministic seeded PRNG
+    let seed = 0;
+    for(let i=0;i<seedDate.length;i++) seed = (seed*1664525 + seedDate.charCodeAt(i)) >>> 0;
+    function rnd(min,max){
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      const r = (seed >>> 0) / 4294967296;
+      return Math.floor(r*(max-min+1))+min;
+    }
+    const arr = [];
+    for(let i=0;i<count;i++){
+      const n1 = rnd(10000,99999);
+      const n2 = rnd(2,9);
+      const t = rnd(0,3);
+      let q,a;
+      if(t===0){ q=`${n1} + ${n2}`; a = n1 + n2; }
+      else if(t===1){ q=`${n1} - ${n2}`; a = n1 - n2; }
+      else if(t===2){ q=`${n1} × ${n2}`; a = n1 * n2; }
+      else { q=`${n1} ÷ ${n2}`; a = parseFloat((n1/n2).toFixed(4)); }
+      arr.push({ q,a });
+    }
+    return arr;
+  }
+
+  /************ Timer (for normal: countdown; for daily: elapsed) ************/
+  function startTimer(){
+    clearInterval(timerInterval);
+    // For daily we show elapsed; for normal we show remaining countdown
+    if(playingDaily){
+      document.getElementById('timer').textContent = `Time: 00:00`;
+      timerInterval = setInterval(()=>{
+        const elapsedMs = Date.now() - (dailyStartAt || startTime || Date.now());
+        const s = Math.floor(elapsedMs/1000);
+        document.getElementById('timer').textContent = `Time: ${formatTime(s)}`;
+      }, 500);
+    } else {
+      document.getElementById('timer').textContent = `Time: ${remainingTime}s`;
+      timerInterval = setInterval(()=>{
+        remainingTime--;
+        document.getElementById('timer').textContent = `Time: ${remainingTime}s`;
+        if(remainingTime <= 0){
+          clearInterval(timerInterval);
+          endGame(false);
+        }
+      },1000);
+    }
+  }
+
+  function formatTime(seconds){
+    const m = Math.floor(seconds/60).toString().padStart(2,'0');
+    const s = (seconds%60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+
+  /************ Questions flow (normal) ************/
+  function nextQuestion(mode){
+    document.getElementById('inpAns').value = '';
+    document.getElementById('feedback').textContent = '';
+    const [min,max] = getRange(mode);
+    const t = rand(0,4);
+    let n1 = rand(min,max), n2 = rand(min,max);
+    let qText, ans;
+    switch(t){
+      case 0: qText = `${n1} + ${n2}`; ans = n1 + n2; break;
+      case 1: if(n2>n1) [n1,n2]=[n2,n1]; qText = `${n1} - ${n2}`; ans = n1 - n2; break;
+      case 2: qText = `${n1} × ${n2}`; ans = n1 * n2; break;
+      case 3: n1 = rand(min,max); n2 = rand(2,9); qText = `${n1} ÷ ${n2}`; ans = parseFloat((n1/n2).toFixed(4)); break;
+      case 4: const sq = rand(min,max); qText = `√${sq*sq}`; ans = sq; break;
+    }
+    currentQuestion = qText; currentAnswer = ans;
+    document.getElementById('question').textContent = qText;
+  }
+
+  /************ Daily question flow (5 legend q's) ************/
+  function nextDailyQuestion(){
+    document.getElementById('inpAns').value = '';
+    document.getElementById('feedback').textContent = '';
+    if(!dailyQuestions || dailyQuestions.length===0){
+      document.getElementById('question').textContent = 'Daily questions not ready';
+      return;
+    }
+    // find next unanswered index
+    let idx = null;
+    for(let i=0;i<dailyQuestions.length;i++){
+      if(!answeredIndices.has(i)){ idx = i; break; }
+    }
+    if(idx === null){
+      // finished all 5
+      // compute time taken and end
+      const timeTakenSec = Math.floor((Date.now() - dailyStartAt)/1000);
+      endDailyAndSave(timeTakenSec);
+      return;
+    }
+    dailyIndex = idx;
+    currentQuestion = dailyQuestions[dailyIndex].q;
+    currentAnswer = dailyQuestions[dailyIndex].a;
+    document.getElementById('question').textContent = currentQuestion;
+  }
+
+  /************ Submit & Skip ************/
+  function submitAnswer(){
+    const raw = document.getElementById('inpAns').value;
+    const val = parseFloat(raw);
+    if(isNaN(val)) return;
+    total++;
+    // compare with tolerance - raw numeric diff (avoid double rounding issues)
+    const tol = 0.02;
+    const isCorrect = Math.abs(val - currentAnswer) <= tol;
+    if(isCorrect){
+      correct++;
+      document.getElementById('feedback').textContent = '✅ Correct';
+    } else {
+      wrong++;
+      const correctRounded = Math.round(currentAnswer*100)/100;
+      mistakes.push({ q: currentQuestion, user: val, correct: correctRounded });
+      document.getElementById('feedback').textContent = `❌ Wrong (Correct: ${correctRounded})`;
+    }
+
+    // mark answered for daily to avoid showing again
+    if(playingDaily){
+      answeredIndices.add(dailyIndex);
+      // next daily
+      setTimeout(nextDailyQuestion, 300);
+    } else {
+      setTimeout(()=> nextQuestion(difficulty), 300);
+    }
+  }
+
+  // skip: do NOT reveal correct answer; only count skip for normal play
+  function skipQuestion(){
+    if(playingDaily) return; // ignore skip in daily (skip disabled)
+    total++; skipped++;
+    document.getElementById('feedback').textContent = '⏭ Skipped';
+    setTimeout(()=> nextQuestion(difficulty), 300);
+  }
+
+  /************ End daily & save (daily rules: 5 answered) ************/
+  function endDailyAndSave(timeTakenSec){
+    clearInterval(timerInterval);
+    hide('gameCard');
+    show('resultCard');
+    show('leaderboardCards');
+    // compute stats for daily
+    const answeredCount = correct + wrong; // should equal 5
+    const accuracy = answeredCount>0 ? ((correct/answeredCount)*100).toFixed(2) : "0.00";
+    const score = correct * 1000; // 1000 per correct
+    const status = timeTakenSec < 120 ? 'Unfair' : 'Fair';
+    // display results
+    document.getElementById('userSummary').textContent = `${userId} • Daily Puzzle • Time taken: ${formatTime(timeTakenSec)}`;
+    document.getElementById('resTotal').textContent = answeredCount;
+    document.getElementById('resCorrect').textContent = correct;
+    document.getElementById('resWrong').textContent = wrong;
+    document.getElementById('resSkipped').textContent = skipped;
+    document.getElementById('resAccuracy').textContent = `${accuracy}%`;
+    document.getElementById('resPoints').textContent = score;
+
+    // save to DB (always save but mark Unfair/Fair)
+    const rec = {
+      userId, mode: 'daily', timeTakenSec, score, status,
+      timestamp: Date.now(), date: dailySeed
+    };
+    // push to daily list and to mainSessions for historical
+    const dailyRef = db.ref(`daily/${dailySeed}`).push();
+    dailyRef.set(rec).then(()=>{
+      // also add to mainSessions
+      db.ref('mainSessions').push({
+        userId, mode: 'daily', time: Math.round(timeTakenSec/60), accuracy, points: score, timestamp: Date.now()
+      });
+      // mark user as played
+      db.ref(`dailyPlayed/${dailySeed}/${sanitizeKey(userId)}`).set(true);
+      // update user total aggregated points (only add score)
+      const userKey = sanitizeKey(userId);
+      db.ref(`users/${userKey}`).once('value').then(snap=>{
+        const cur = snap.val() || { name: userId, totalPoints: 0 };
+        const newTotal = (cur.totalPoints || 0) + score;
+        db.ref(`users/${userKey}`).update({ name: userId, totalPoints: newTotal }).then(()=>{
+          updateDailyBoard();
+          updateMainBoard();
+        });
+      });
+    });
+
+  }
+
+  /************ End normal game (countdown finished or quit) ************/
+  function endGame(quitFlag=false){
+    clearInterval(timerInterval);
+    hide('gameCard'); show('resultCard'); show('leaderboardCards');
+    const elapsed = Math.floor((Date.now()-startTime)/1000);
+    const answered = Math.max(0, total - skipped);
+    const avgTime = answered>0 ? (elapsed/answered).toFixed(2) : 0;
+    const accuracy = answered>0 ? ((correct/answered)*100).toFixed(2) : "0.00";
+    const points = correct * (modePoints[difficulty] || 10);
+    document.getElementById('userSummary').textContent = `${userId} • Mode: ${difficulty} • Time set: ${timeMin} min${quitFlag? ' • Quit early':''}`;
+    document.getElementById('resTotal').textContent = total;
+    document.getElementById('resCorrect').textContent = correct;
+    document.getElementById('resWrong').textContent = wrong;
+    document.getElementById('resSkipped').textContent = skipped;
+    document.getElementById('resAccuracy').textContent = `${accuracy}%`;
+    document.getElementById('resPoints').textContent = points;
+
+    // save session to DB
+    const session = { userId, mode: difficulty, time: timeMin, accuracy, points, timestamp: Date.now() };
+    db.ref('mainSessions').push(session).then(()=>{
+      // update user's total
+      const userKey = sanitizeKey(userId);
+      db.ref(`users/${userKey}`).once('value').then(snap=>{
+        const cur = snap.val() || { name: userId, totalPoints: 0};
+        const newTotal = (cur.totalPoints || 0) + points;
+        db.ref(`users/${userKey}`).update({ name: userId, totalPoints: newTotal }).then(()=>{
+          updateMainBoard();
+        });
+      });
+    });
+  }
+
+  /************ Misc helpers ************/
+  function resetGameState(){
+    clearInterval(timerInterval);
+    correct=0; wrong=0; total=0; skipped=0; mistakes=[]; currentAnswer=null; currentQuestion=null;
+    dailyQuestions=[]; dailyIndex=0; answeredIndices = new Set(); dailyStartAt = null;
+    document.getElementById('btnSkip').disabled = false;
+    document.getElementById('feedback').textContent = '';
+  }
+
+  function confirmQuit(){
+    if(confirm('Quit now? Your current score will be saved.')){
+      if(playingDaily) {
+        // if quitting during daily, treat as finished? We'll end and save current state (partial)
+        const timeTakenSec = Math.floor((Date.now()-dailyStartAt)/1000);
+        // Save what answered so far (score = correct*1000). Mark status Fair/Unfair based on total time
+        endDailyAndSave(timeTakenSec);
+      } else {
+        endGame(true);
+      }
+    }
+  }
+
+  /************ Mistakes modal ************/
+  function openMistakes(){
+    const el = document.getElementById('mistakesList');
+    el.innerHTML = '';
+    if(mistakes.length === 0){
+      el.innerHTML = '<div class="small">No mistakes! 🎉</div>';
+    } else {
+      mistakes.forEach((m,i)=>{
+        const html = `<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.03)">
+          <strong>${i+1}.</strong> ${escapeHtml(m.q)}<br>
+          <span class="small">Your: ${escapeHtml(String(m.user))} • Correct: ${escapeHtml(String(m.correct))}</span>
+        </div>`;
+        el.innerHTML += html;
+      });
+    }
+    show('mistakesModal');
+  }
+  function closeMistakes(){ hide('mistakesModal'); }
+
+  /************ Leaderboards ************/
+  function showTab(tab){
+    if(tab === 'main'){
+      document.getElementById('tabMain').classList.add('active');
+      document.getElementById('tabDaily').classList.remove('active');
+      show('mainBoard'); hide('dailyBoard'); show('mainControls');
+    } else {
+      document.getElementById('tabDaily').classList.add('active');
+      document.getElementById('tabMain').classList.remove('active');
+      hide('mainBoard'); show('dailyBoard'); hide('mainControls');
+    }
+  }
+
+  // Main board load & filter
+  function updateMainBoard(){
+    const filter = document.getElementById('filterMode').value;
+    db.ref('mainSessions').once('value').then(snap=>{
+      const obj = snap.val() || {};
+      const arr = Object.keys(obj).map(k => obj[k]);
+      db.ref('users').once('value').then(uSnap=>{
+        const users = uSnap.val() || {};
+        const filtered = arr.filter(s=>{
+          if(filter === 'all') return true;
+          if(filter === 'daily') return s.mode === 'daily';
+          return s.mode === filter;
+        }).sort((a,b)=> b.timestamp - a.timestamp);
+        const body = document.getElementById('leaderboardBody'); body.innerHTML = '';
+        filtered.forEach(s=>{
+          const key = sanitizeKey(s.userId);
+          const totalPts = users[key] ? (users[key].totalPoints || 0) : 0;
+          const when = new Date(s.timestamp).toLocaleString();
+          body.innerHTML += `<tr>
+            <td>${escapeHtml(s.userId)}</td>
+            <td>${escapeHtml(s.mode)}</td>
+            <td>${s.time} min</td>
+            <td>${s.accuracy}</td>
+            <td>${s.points}</td>
+            <td>${totalPts}</td>
+            <td>${when}</td>
+          </tr>`;
+        });
+      });
+    });
+  }
+
+  // sort main by total points
+  function sortByTotalPoints(){
+    db.ref('users').once('value').then(userSnap=>{
+      const users = userSnap.val() || {};
+      db.ref('mainSessions').once('value').then(snap=>{
+        const obj = snap.val() || {};
+        const sessions = Object.keys(obj).map(k => obj[k]);
+        sessions.forEach(s=>{
+          const k = sanitizeKey(s.userId);
+          s._total = users[k] ? (users[k].totalPoints || 0) : 0;
+        });
+        sessions.sort((a,b)=> b._total - a._total);
+        const body = document.getElementById('leaderboardBody'); body.innerHTML = '';
+        sessions.forEach(s=>{
+          body.innerHTML += `<tr>
+            <td>${escapeHtml(s.userId)}</td>
+            <td>${escapeHtml(s.mode)}</td>
+            <td>${s.time} min</td>
+            <td>${s.accuracy}</td>
+            <td>${s.points}</td>
+            <td>${s._total}</td>
+            <td>${new Date(s.timestamp).toLocaleString()}</td>
+          </tr>`;
+        });
+      });
+    });
+  }
+
+  // Daily board (sorted by least timeTakenSec)
+  function updateDailyBoard(){
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('dailySeedLabel').textContent = today;
+    db.ref(`daily/${today}`).once('value').then(snap=>{
+      const obj = snap.val() || {};
+      let arr = Object.keys(obj).map(k => obj[k]);
+      // ensure fields and sort by timeTakenSec asc
+      arr = arr.map(e => ({ ...e })).sort((a,b)=> (a.timeTakenSec||0) - (b.timeTakenSec||0));
+      const body = document.getElementById('dailyBody'); body.innerHTML = '';
+      arr.forEach((e,i)=>{
+        const when = new Date(e.timestamp).toLocaleString();
+        const mm = formatTime(Math.floor((e.timeTakenSec||0)));
+        body.innerHTML += `<tr>
+          <td>${i+1}</td>
+          <td>${escapeHtml(e.userId)}</td>
+          <td>${e.score}</td>
+          <td>${mm}</td>
+          <td>${escapeHtml(e.status || 'Fair')}</td>
+          <td>${when}</td>
+        </tr>`;
+      });
+    });
+  }
+
+  /************ Admin reset with password prompt ************/
+  const ADMIN_PASS = 'mathadmin2025';
+  function resetPrompt(which){
+    const pw = prompt('Enter admin password:');
+    if(pw !== ADMIN_PASS){ alert('Wrong password'); return; }
+    if(which === 'main'){
+      if(!confirm('Delete all main sessions and user totals? This is destructive.')) return;
+      db.ref('mainSessions').remove();
+      db.ref('users').remove();
+      updateMainBoard();
+      alert('Main leaderboard cleared.');
+    } else if(which === 'daily'){
+      const today = new Date().toISOString().slice(0,10);
+      if(!confirm(`Delete today's daily (${today}) entries AND dailyQuestions?`)) return;
+      db.ref(`daily/${today}`).remove();
+      db.ref(`dailyPlayed/${today}`).remove();
+      db.ref(`dailyQuestions/${today}`).remove();
+      updateDailyBoard(); updateMainBoard();
+      alert('Daily cleared.');
+    }
+  }
+
+  /************ Utilities ************/
+  function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function getRange(mode){
+    switch(mode){
+      case 'easy': return [1,10];
+      case 'medium': return [10,100];
+      case 'hard': return [100,1000];
+      case 'pro': return [1000,10000];
+      case 'legend': return [10000,99999];
+      default: return [1,10];
+    }
+  }
+  function sanitizeKey(s){ return (s||'').replace(/[.$#[\]/]/g,'_'); }
+  function escapeHtml(t){ if(t===undefined||t===null) return ''; return String(t).replace(/[&<>"']/g,m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+
+  /************ Init ************/
+  document.addEventListener('DOMContentLoaded', ()=>{
+    updateMainBoard();
+    updateDailyBoard();
+    showTab('main');
+  });
+
+  </script>
 </body>
 </html>
